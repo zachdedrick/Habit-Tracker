@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/auth'
 import { getWeekDates } from '../lib/dates'
+import { getErrorMessage } from '../lib/errors'
 import type { Habit, HabitLog, Week } from '../types'
 
 export function logKey(habitId: string, date: string) {
@@ -68,7 +69,7 @@ export function useWeekData(weekStart: string) {
         setLogs({})
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load week')
+      setError(getErrorMessage(err, 'Failed to load week'))
     } finally {
       setLoading(false)
     }

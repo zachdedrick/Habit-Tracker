@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/auth'
 import { formatWeekRange, getWeekStart } from '../lib/dates'
+import { getErrorMessage } from '../lib/errors'
 import type { Week } from '../types'
 
 export default function Archive() {
@@ -28,7 +29,7 @@ export default function Archive() {
         if (fetchError) throw fetchError
         if (!cancelled) setWeeks(data ?? [])
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load archive')
+        if (!cancelled) setError(getErrorMessage(err, 'Failed to load archive'))
       } finally {
         if (!cancelled) setLoading(false)
       }

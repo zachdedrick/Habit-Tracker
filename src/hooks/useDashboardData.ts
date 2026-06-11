@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getWeekDates } from '../lib/dates'
+import { getErrorMessage } from '../lib/errors'
 import type { Habit, HabitLog, Week } from '../types'
 
 export interface HabitSummary {
@@ -92,7 +93,7 @@ export function useDashboardData(weekId: string | undefined) {
           })
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+        if (!cancelled) setError(getErrorMessage(err, 'Failed to load dashboard'))
       } finally {
         if (!cancelled) setLoading(false)
       }
