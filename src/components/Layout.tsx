@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const tabs = [
+  { to: '/insights', label: 'Insights', icon: '📊' },
   { to: '/', label: 'Today', icon: '✓' },
   { to: '/week', label: 'Week', icon: '📅' },
   { to: '/archive', label: 'Archive', icon: '🗂' },

@@ -1,4 +1,4 @@
-import { addDays, addWeeks, format, startOfWeek } from 'date-fns'
+import { addDays, addWeeks, format, startOfWeek, subDays } from 'date-fns'
 
 /** Returns the ISO date string (yyyy-MM-dd) for the Monday of the week containing `date`. */
 export function getWeekStart(date: Date = new Date()): string {
@@ -43,4 +43,8 @@ export function dayLabel(dateStr: string): string {
 
 export function dayNumber(dateStr: string): string {
   return format(new Date(`${dateStr}T00:00:00`), 'd')
+}
+
+export function daysAgoStr(n: number): string {
+  return format(subDays(new Date(), n), 'yyyy-MM-dd')
 }

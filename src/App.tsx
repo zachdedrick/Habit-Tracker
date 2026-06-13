@@ -7,6 +7,7 @@ import Today from './pages/Today'
 import Week from './pages/Week'
 import Dashboard from './pages/Dashboard'
 import Archive from './pages/Archive'
+import Insights from './pages/Insights'
 
 function AppRoutes() {
   const { session, loading } = useAuth()
@@ -27,6 +28,7 @@ function AppRoutes() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Today />} />
+        <Route path="insights" element={<Insights />} />
         <Route path="week" element={<Week />} />
         <Route path="dashboard/:weekId" element={<Dashboard />} />
         <Route path="archive" element={<Archive />} />
