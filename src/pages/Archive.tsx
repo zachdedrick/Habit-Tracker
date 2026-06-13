@@ -51,8 +51,18 @@ export default function Archive() {
 
   return (
     <div className="p-4">
-      <h2 className="text-lg font-semibold text-slate-900">Archive</h2>
-      <p className="text-sm text-slate-500">Past weekly dashboards</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">Archive</h2>
+          <p className="text-sm text-slate-500">Past weekly dashboards</p>
+        </div>
+        <Link
+          to="/import"
+          className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-500"
+        >
+          Import data
+        </Link>
+      </div>
 
       {weeks.length === 0 ? (
         <p className="mt-4 text-sm text-slate-500">No past weeks yet.</p>

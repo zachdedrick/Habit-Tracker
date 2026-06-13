@@ -1,4 +1,4 @@
-import { addDays, addWeeks, format, startOfWeek, subDays } from 'date-fns'
+import { addDays, addWeeks, format, isValid, parse, startOfWeek, subDays } from 'date-fns'
 
 /** Returns the ISO date string (yyyy-MM-dd) for the Monday of the week containing `date`. */
 export function getWeekStart(date: Date = new Date()): string {
@@ -47,4 +47,21 @@ export function dayNumber(dateStr: string): string {
 
 export function daysAgoStr(n: number): string {
   return format(subDays(new Date(), n), 'yyyy-MM-dd')
+}
+
+/** Parses common spreadsheet date formats into yyyy-MM-dd, or returns null if unrecognized. */
+export function parseFlexibleDate(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  const formats = ['yyyy-MM-dd', 'M/d/yyyy', 'MM/dd/yyyy', 'M/d/yy', 'MM/dd/yy', 'MMM d, yyyy', 'MMMM d, yyyy']
+  for (const fmt of formats) {
+    const parsed = parse(trimmed, fmt, new Date())
+    if (isValid(parsed)) return format(parsed, 'yyyy-MM-dd')
+  }
+
+  const fallback = new Date(trimmed)
+  if (isValid(fallback)) return format(fallback, 'yyyy-MM-dd')
+
+  return null
 }

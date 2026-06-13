@@ -8,6 +8,7 @@ import Week from './pages/Week'
 import Dashboard from './pages/Dashboard'
 import Archive from './pages/Archive'
 import Insights from './pages/Insights'
+import Import from './pages/Import'
 
 function AppRoutes() {
   const { session, loading } = useAuth()
@@ -32,6 +33,7 @@ function AppRoutes() {
         <Route path="week" element={<Week />} />
         <Route path="dashboard/:weekId" element={<Dashboard />} />
         <Route path="archive" element={<Archive />} />
+        <Route path="import" element={<Import />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
