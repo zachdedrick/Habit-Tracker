@@ -23,3 +23,34 @@ export interface HabitLog {
   note: string | null
   updated_at: string
 }
+
+export interface Profile {
+  id: string
+  email: string
+  display_name: string | null
+  created_at: string
+}
+
+export interface FriendRequest {
+  id: string
+  sender_id: string
+  receiver_id: string
+  status: 'pending' | 'accepted' | 'declined'
+  created_at: string
+  sender?: Profile
+  receiver?: Profile
+}
+
+export interface Wager {
+  id: string
+  challenger_id: string
+  challenged_id: string
+  week_start: string
+  challenger_target_pct: number
+  challenged_target_pct: number | null
+  stake: string
+  status: 'pending' | 'active' | 'completed' | 'declined' | 'cancelled'
+  created_at: string
+  challenger?: Profile
+  challenged?: Profile
+}

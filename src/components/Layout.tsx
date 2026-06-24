@@ -5,6 +5,7 @@ const tabs = [
   { to: '/insights', label: 'Insights', icon: '📊' },
   { to: '/', label: 'Today', icon: '✓' },
   { to: '/week', label: 'Week', icon: '📅' },
+  { to: '/friends', label: 'Friends', icon: '👥' },
   { to: '/archive', label: 'Archive', icon: '🗂' },
 ]
 

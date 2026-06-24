@@ -16,6 +16,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
       setLoading(false)
+      if (newSession?.user) {
+        void supabase.from('profiles').upsert(
+          { id: newSession.user.id, email: newSession.user.email ?? '' },
+          { onConflict: 'id', ignoreDuplicates: true },
+        )
+      }
     })
 
     return () => {

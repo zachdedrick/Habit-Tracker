@@ -9,6 +9,9 @@ import Dashboard from './pages/Dashboard'
 import Archive from './pages/Archive'
 import Insights from './pages/Insights'
 import Import from './pages/Import'
+import Friends from './pages/Friends'
+import FriendProfile from './pages/FriendProfile'
+import WagerDetail from './pages/WagerDetail'
 
 function AppRoutes() {
   const { session, loading } = useAuth()
@@ -32,6 +35,9 @@ function AppRoutes() {
         <Route path="insights" element={<Insights />} />
         <Route path="week" element={<Week />} />
         <Route path="dashboard/:weekId" element={<Dashboard />} />
+        <Route path="friends" element={<Friends />} />
+        <Route path="friends/:friendId" element={<FriendProfile />} />
+        <Route path="wager/:wagerId" element={<WagerDetail />} />
         <Route path="archive" element={<Archive />} />
         <Route path="import" element={<Import />} />
         <Route path="*" element={<Navigate to="/" replace />} />
