@@ -2,9 +2,46 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useFriends } from '../hooks/useFriends'
 import { useWagers } from '../hooks/useWagers'
+import type { Profile } from '../types'
+
+function AvailableUser({ profile, onAdd }: { profile: Profile; onAdd: (id: string) => Promise<void> }) {
+  const [adding, setAdding] = useState(false)
+  const [added, setAdded] = useState(false)
+
+  async function handleAdd() {
+    setAdding(true)
+    try {
+      await onAdd(profile.id)
+      setAdded(true)
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  return (
+    <li className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+      <div>
+        <p className="text-sm font-medium text-slate-900">{profile.display_name ?? profile.email}</p>
+        <p className="text-xs text-slate-500">{profile.email}</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleAdd}
+        disabled={adding || added}
+        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+          added
+            ? 'bg-emerald-100 text-emerald-700'
+            : 'bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-60'
+        }`}
+      >
+        {added ? 'Sent ✓' : adding ? '…' : 'Add'}
+      </button>
+    </li>
+  )
+}
 
 export default function Friends() {
-  const { incoming, outgoing, friends, loading, error, sendRequest, respondToRequest, removeFriend } = useFriends()
+  const { incoming, outgoing, friends, available, loading, error, sendRequest, sendRequestById, respondToRequest, removeFriend } = useFriends()
   const { pendingIncoming: wagerIncoming, active: activeWagers, loading: wagersLoading } = useWagers()
 
   const [email, setEmail] = useState('')
@@ -161,9 +198,21 @@ export default function Friends() {
         )}
       </div>
 
-      {/* Add friend */}
+      {/* People you can connect with */}
+      {available.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">People on Habit Tracker</h3>
+          <ul className="space-y-2">
+            {available.map((profile) => (
+              <AvailableUser key={profile.id} profile={profile} onAdd={sendRequestById} />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Add friend by email */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">Add a friend</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Add by email</h3>
         <form onSubmit={handleSendRequest} className="space-y-2">
           <input
             type="email"
