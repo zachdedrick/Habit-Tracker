@@ -199,16 +199,20 @@ export default function Friends() {
       </div>
 
       {/* People you can connect with */}
-      {available.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">People on Habit Tracker</h3>
+      <div>
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">People on Habit Tracker</h3>
+        {available.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            No other users yet. Share the app with friends so they show up here.
+          </p>
+        ) : (
           <ul className="space-y-2">
             {available.map((profile) => (
               <AvailableUser key={profile.id} profile={profile} onAdd={sendRequestById} />
             ))}
           </ul>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Add friend by email */}
       <div>
