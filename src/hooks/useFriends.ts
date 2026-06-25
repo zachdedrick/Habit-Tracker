@@ -71,7 +71,7 @@ export function useFriends() {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', trimmed)
+      .ilike('email', trimmed)
       .maybeSingle()
     if (profileError) throw profileError
     if (!profile) throw new Error('No account found with that email address.')

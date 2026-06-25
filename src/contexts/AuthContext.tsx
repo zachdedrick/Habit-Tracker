@@ -3,6 +3,13 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { AuthContext } from './auth'
 
+async function upsertProfile(id: string, email: string) {
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({ id, email }, { onConflict: 'id', ignoreDuplicates: true })
+  if (error) console.error('Profile upsert failed:', error.message)
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -12,10 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session)
       setLoading(false)
       if (data.session?.user) {
-        void supabase.from('profiles').upsert(
-          { id: data.session.user.id, email: data.session.user.email ?? '' },
-          { onConflict: 'id', ignoreDuplicates: true },
-        )
+        void upsertProfile(data.session.user.id, data.session.user.email ?? '')
       }
     })
 
@@ -23,10 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession)
       setLoading(false)
       if (newSession?.user) {
-        void supabase.from('profiles').upsert(
-          { id: newSession.user.id, email: newSession.user.email ?? '' },
-          { onConflict: 'id', ignoreDuplicates: true },
-        )
+        void upsertProfile(newSession.user.id, newSession.user.email ?? '')
       }
     })
 
