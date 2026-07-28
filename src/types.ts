@@ -41,6 +41,14 @@ export interface FriendRequest {
   receiver?: Profile
 }
 
+export interface WeeklyBonus {
+  id: string
+  user_id: string
+  week_id: string
+  name: string
+  created_at: string
+}
+
 export interface Wager {
   id: string
   challenger_id: string

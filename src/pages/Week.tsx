@@ -19,11 +19,12 @@ export default function Week() {
   const weekStart = searchParams.get('week') ?? getWeekStart()
   const previousWeekStart = shiftWeek(weekStart, -1)
 
-  const { week, habits, logs, loading, error, addHabit, renameHabit, deleteHabit, copyHabitsFrom, toggleCompleted, setNote } =
+  const { week, habits, logs, bonuses, loading, error, addHabit, renameHabit, deleteHabit, copyHabitsFrom, toggleCompleted, setNote, addBonus, removeBonus } =
     useWeekData(weekStart)
   const previous = useWeekData(previousWeekStart)
 
   const [newHabitName, setNewHabitName] = useState('')
+  const [newBonusName, setNewBonusName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [noteTarget, setNoteTarget] = useState<{ habitId: string; date: string } | null>(null)
@@ -230,6 +231,62 @@ export default function Week() {
             </button>
           </form>
         )}
+      </div>
+
+      {/* Weekly bonuses */}
+      <div className="mt-6 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Weekly bonuses</h3>
+            <p className="text-xs text-slate-500">Extra completions that count toward your weekly total</p>
+          </div>
+          {bonuses.length > 0 && (
+            <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+              +{bonuses.length}
+            </span>
+          )}
+        </div>
+
+        {bonuses.length > 0 && (
+          <ul className="mb-3 space-y-2">
+            {bonuses.map((bonus) => (
+              <li key={bonus.id} className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">✓</span>
+                <span className="flex-1 text-sm text-slate-800">{bonus.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeBonus(bonus.id)}
+                  aria-label="Remove bonus"
+                  className="text-slate-400 hover:text-red-500 text-lg leading-none"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            await addBonus(newBonusName)
+            setNewBonusName('')
+          }}
+          className="flex gap-2"
+        >
+          <input
+            value={newBonusName}
+            onChange={(e) => setNewBonusName(e.target.value)}
+            placeholder="Describe the bonus (e.g. extra workout)"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+          <button
+            type="submit"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+          >
+            Add
+          </button>
+        </form>
       </div>
 
       {noteHabit && noteTarget && (

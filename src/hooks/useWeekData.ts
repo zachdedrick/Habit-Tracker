@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/auth'
 import { getWeekDates } from '../lib/dates'
 import { getErrorMessage } from '../lib/errors'
-import type { Habit, HabitLog, Week } from '../types'
+import type { Habit, HabitLog, Week, WeeklyBonus } from '../types'
 
 export function logKey(habitId: string, date: string) {
   return `${habitId}__${date}`
@@ -14,6 +14,7 @@ export function useWeekData(weekStart: string) {
   const [week, setWeek] = useState<Week | null>(null)
   const [habits, setHabits] = useState<Habit[]>([])
   const [logs, setLogs] = useState<Record<string, HabitLog>>({})
+  const [bonuses, setBonuses] = useState<WeeklyBonus[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -68,6 +69,14 @@ export function useWeekData(weekStart: string) {
       } else {
         setLogs({})
       }
+
+      const { data: bonusRows, error: bonusError } = await supabase
+        .from('weekly_bonuses')
+        .select('*')
+        .eq('week_id', weekRow!.id)
+        .order('created_at', { ascending: true })
+      if (bonusError) throw bonusError
+      setBonuses(bonusRows ?? [])
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to load week'))
     } finally {
@@ -210,10 +219,30 @@ export function useWeekData(weekStart: string) {
     setLogs((prev) => ({ ...prev, [key]: data }))
   }
 
+  async function addBonus(name: string) {
+    if (!user || !week) return
+    const trimmed = name.trim()
+    if (!trimmed) return
+    const { data, error: insertError } = await supabase
+      .from('weekly_bonuses')
+      .insert({ user_id: user.id, week_id: week.id, name: trimmed })
+      .select('*')
+      .single()
+    if (insertError) throw insertError
+    setBonuses((prev) => [...prev, data])
+  }
+
+  async function removeBonus(id: string) {
+    const { error: deleteError } = await supabase.from('weekly_bonuses').delete().eq('id', id)
+    if (deleteError) throw deleteError
+    setBonuses((prev) => prev.filter((b) => b.id !== id))
+  }
+
   return {
     week,
     habits,
     logs,
+    bonuses,
     loading,
     error,
     reload: load,
@@ -223,5 +252,7 @@ export function useWeekData(weekStart: string) {
     copyHabitsFrom,
     toggleCompleted,
     setNote,
+    addBonus,
+    removeBonus,
   }
 }
