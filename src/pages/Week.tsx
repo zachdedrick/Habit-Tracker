@@ -19,8 +19,12 @@ export default function Week() {
   const weekStart = searchParams.get('week') ?? getWeekStart()
   const previousWeekStart = shiftWeek(weekStart, -1)
 
-  const { week, habits, logs, bonuses, loading, error, addHabit, renameHabit, deleteHabit, copyHabitsFrom, toggleCompleted, setNote, addBonus, removeBonus } =
-    useWeekData(weekStart)
+  const {
+    week, habits, logs, bonuses, loading, error,
+    addHabit, renameHabit, deleteHabit, copyHabitsFrom,
+    toggleCompleted, setNote,
+    addBonus, removeBonus, toggleBonus, copyBonusesFrom,
+  } = useWeekData(weekStart)
   const previous = useWeekData(previousWeekStart)
 
   const [newHabitName, setNewHabitName] = useState('')
@@ -29,6 +33,7 @@ export default function Week() {
   const [editingName, setEditingName] = useState('')
   const [noteTarget, setNoteTarget] = useState<{ habitId: string; date: string } | null>(null)
   const [managing, setManaging] = useState(false)
+  const [managingBonuses, setManagingBonuses] = useState(false)
 
   const dates = getWeekDates(weekStart)
   const today = todayStr()
@@ -59,6 +64,15 @@ export default function Week() {
 
   const noteHabit = habits.find((h) => h.id === noteTarget?.habitId)
 
+  // Weekly completion % inclusive of bonuses
+  const completedLogs = habits.reduce(
+    (sum, h) => sum + dates.filter((d) => logs[logKey(h.id, d)]?.completed).length,
+    0,
+  )
+  const completedBonuses = bonuses.filter((b) => b.completed).length
+  const totalSlots = habits.length * 7 + bonuses.length
+  const weeklyPct = totalSlots > 0 ? Math.round(((completedLogs + completedBonuses) / totalSlots) * 100) : null
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between">
@@ -88,13 +102,22 @@ export default function Week() {
         </button>
       </div>
 
+      {/* Weekly % + Dashboard button */}
       {week && (
-        <Link
-          to={`/dashboard/${week.id}`}
-          className="mt-4 block w-full rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-500"
-        >
-          View weekly dashboard
-        </Link>
+        <div className="mt-4 flex gap-3">
+          <div className="flex flex-1 flex-col items-center justify-center rounded-xl bg-white py-3 shadow-sm ring-1 ring-slate-200">
+            <p className="text-xs font-medium text-slate-500">This week</p>
+            <p className="mt-0.5 text-2xl font-bold text-indigo-600">
+              {weeklyPct !== null ? `${weeklyPct}%` : '—'}
+            </p>
+          </div>
+          <Link
+            to={`/dashboard/${week.id}`}
+            className="flex flex-1 items-center justify-center rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-500"
+          >
+            View weekly dashboard
+          </Link>
+        </div>
       )}
 
       {habits.length === 0 && previous.habits.length > 0 && (
@@ -234,59 +257,99 @@ export default function Week() {
       </div>
 
       {/* Weekly bonuses */}
-      <div className="mt-6 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-        <div className="flex items-center justify-between mb-3">
+      <div className="mt-6">
+        <div className="mb-2 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900">Weekly bonuses</h3>
-            <p className="text-xs text-slate-500">Extra completions that count toward your weekly total</p>
+            <p className="text-xs text-slate-500">Extra goals that count toward your weekly total</p>
           </div>
-          {bonuses.length > 0 && (
-            <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
-              +{bonuses.length}
-            </span>
-          )}
+          <button
+            type="button"
+            onClick={() => setManagingBonuses((m) => !m)}
+            className="text-xs font-medium text-indigo-600"
+          >
+            {managingBonuses ? 'Done' : 'Manage'}
+          </button>
         </div>
+
+        {/* Copy from last week prompt */}
+        {bonuses.length === 0 && previous.bonuses.length > 0 && (
+          <div className="mb-3 rounded-xl border border-dashed border-slate-300 p-3 text-center">
+            <p className="text-sm text-slate-600">Use last week's bonuses?</p>
+            <button
+              type="button"
+              onClick={() => copyBonusesFrom(previous.week!.id)}
+              className="mt-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500"
+            >
+              Copy last week's bonuses
+            </button>
+          </div>
+        )}
 
         {bonuses.length > 0 && (
           <ul className="mb-3 space-y-2">
             {bonuses.map((bonus) => (
-              <li key={bonus.id} className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">✓</span>
-                <span className="flex-1 text-sm text-slate-800">{bonus.name}</span>
+              <li
+                key={bonus.id}
+                className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200"
+              >
                 <button
                   type="button"
-                  onClick={() => removeBonus(bonus.id)}
-                  aria-label="Remove bonus"
-                  className="text-slate-400 hover:text-red-500 text-lg leading-none"
+                  onClick={() => toggleBonus(bonus.id)}
+                  aria-label={bonus.completed ? 'Mark incomplete' : 'Mark complete'}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition ${
+                    bonus.completed
+                      ? 'border-emerald-500 bg-emerald-500 text-white'
+                      : 'border-slate-300 text-transparent'
+                  }`}
                 >
-                  ×
+                  ✓
                 </button>
+                <span className={`flex-1 text-sm ${bonus.completed ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                  {bonus.name}
+                </span>
+                {managingBonuses && (
+                  <button
+                    type="button"
+                    onClick={() => removeBonus(bonus.id)}
+                    aria-label="Remove bonus"
+                    className="text-slate-400 hover:text-red-500"
+                  >
+                    🗑
+                  </button>
+                )}
               </li>
             ))}
           </ul>
         )}
 
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault()
-            await addBonus(newBonusName)
-            setNewBonusName('')
-          }}
-          className="flex gap-2"
-        >
-          <input
-            value={newBonusName}
-            onChange={(e) => setNewBonusName(e.target.value)}
-            placeholder="Describe the bonus (e.g. extra workout)"
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+        {managingBonuses && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              await addBonus(newBonusName)
+              setNewBonusName('')
+            }}
+            className="flex gap-2"
           >
-            Add
-          </button>
-        </form>
+            <input
+              value={newBonusName}
+              onChange={(e) => setNewBonusName(e.target.value)}
+              placeholder="New bonus (e.g. extra workout)"
+              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            <button
+              type="submit"
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+            >
+              Add
+            </button>
+          </form>
+        )}
+
+        {bonuses.length === 0 && !managingBonuses && previous.bonuses.length === 0 && (
+          <p className="text-sm text-slate-400">No bonuses yet — tap Manage to add some.</p>
+        )}
       </div>
 
       {noteHabit && noteTarget && (

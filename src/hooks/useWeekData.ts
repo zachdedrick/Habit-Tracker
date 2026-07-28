@@ -225,7 +225,7 @@ export function useWeekData(weekStart: string) {
     if (!trimmed) return
     const { data, error: insertError } = await supabase
       .from('weekly_bonuses')
-      .insert({ user_id: user.id, week_id: week.id, name: trimmed })
+      .insert({ user_id: user.id, week_id: week.id, name: trimmed, completed: false })
       .select('*')
       .single()
     if (insertError) throw insertError
@@ -236,6 +236,40 @@ export function useWeekData(weekStart: string) {
     const { error: deleteError } = await supabase.from('weekly_bonuses').delete().eq('id', id)
     if (deleteError) throw deleteError
     setBonuses((prev) => prev.filter((b) => b.id !== id))
+  }
+
+  async function toggleBonus(id: string) {
+    const bonus = bonuses.find((b) => b.id === id)
+    if (!bonus) return
+    const { data, error: updateError } = await supabase
+      .from('weekly_bonuses')
+      .update({ completed: !bonus.completed })
+      .eq('id', id)
+      .select('*')
+      .single()
+    if (updateError) throw updateError
+    setBonuses((prev) => prev.map((b) => (b.id === id ? data : b)))
+  }
+
+  async function copyBonusesFrom(sourceWeekId: string) {
+    if (!user || !week) return
+    const { data: sourceBonuses, error: fetchError } = await supabase
+      .from('weekly_bonuses')
+      .select('*')
+      .eq('week_id', sourceWeekId)
+      .order('created_at', { ascending: true })
+    if (fetchError) throw fetchError
+    if (!sourceBonuses || sourceBonuses.length === 0) return
+
+    const rows = sourceBonuses.map((b) => ({
+      user_id: user.id,
+      week_id: week.id,
+      name: b.name,
+      completed: false,
+    }))
+    const { data, error: insertError } = await supabase.from('weekly_bonuses').insert(rows).select('*')
+    if (insertError) throw insertError
+    setBonuses(data ?? [])
   }
 
   return {
@@ -254,5 +288,7 @@ export function useWeekData(weekStart: string) {
     setNote,
     addBonus,
     removeBonus,
+    toggleBonus,
+    copyBonusesFrom,
   }
 }

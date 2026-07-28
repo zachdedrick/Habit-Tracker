@@ -108,15 +108,17 @@ export function useStatsData() {
             (sum, h) => sum + weekDates.filter((date) => logMap.get(`${h.id}__${date}`)?.completed).length,
             0,
           )
-          let bonusCount = 0
+          let completedBonuses = 0
+          let totalBonuses = 0
           if (currentWeek) {
             const { data: bonusRows } = await supabase
               .from('weekly_bonuses')
-              .select('id')
+              .select('id, completed')
               .eq('week_id', currentWeek.id)
-            bonusCount = bonusRows?.length ?? 0
+            totalBonuses = bonusRows?.length ?? 0
+            completedBonuses = bonusRows?.filter((b) => b.completed).length ?? 0
           }
-          weekTotalRate = (totalCompleted + bonusCount) / (habitCount * weekDates.length)
+          weekTotalRate = (totalCompleted + completedBonuses) / (habitCount * weekDates.length + totalBonuses)
         }
 
         // --- Rolling 30-day stats, grouped by habit name ---

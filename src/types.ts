@@ -46,6 +46,7 @@ export interface WeeklyBonus {
   user_id: string
   week_id: string
   name: string
+  completed: boolean
   created_at: string
 }
 
