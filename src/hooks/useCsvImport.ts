@@ -88,15 +88,18 @@ export function useCsvImport() {
           }
         }
 
-        // Build habit_logs upserts for every (date, habit) pair in this week.
+        // Build habit_logs upserts — only for completed=true entries so imported
+        // zeros/blanks stay as unchecked (no row) rather than red ✗.
         const logRows = entries.flatMap((entry) =>
-          parsed.habitNames.map((name) => ({
-            user_id: user.id,
-            habit_id: habitIdByName.get(name)!,
-            log_date: entry.date,
-            completed: entry.values[name] ?? false,
-            updated_at: new Date().toISOString(),
-          })),
+          parsed.habitNames
+            .filter((name) => entry.values[name] === true)
+            .map((name) => ({
+              user_id: user.id,
+              habit_id: habitIdByName.get(name)!,
+              log_date: entry.date,
+              completed: true,
+              updated_at: new Date().toISOString(),
+            })),
         )
 
         for (let i = 0; i < logRows.length; i += CHUNK_SIZE) {

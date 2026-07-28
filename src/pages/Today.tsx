@@ -38,7 +38,7 @@ export default function Today() {
         <ul className="mt-4 space-y-2">
           {habits.map((habit) => {
             const log = logs[logKey(habit.id, today)]
-            const completed = log?.completed ?? false
+            const state = !log ? 'none' : log.completed ? 'done' : 'missed'
             const hasNote = !!log?.note
             return (
               <li
@@ -48,16 +48,18 @@ export default function Today() {
                 <button
                   type="button"
                   onClick={() => toggleCompleted(habit.id, today)}
-                  aria-label={completed ? 'Mark incomplete' : 'Mark complete'}
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm transition ${
-                    completed
+                  aria-label={state === 'done' ? 'Mark missed' : state === 'missed' ? 'Clear' : 'Mark complete'}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition ${
+                    state === 'done'
                       ? 'border-emerald-500 bg-emerald-500 text-white'
+                      : state === 'missed'
+                      ? 'border-red-500 bg-red-500 text-white'
                       : 'border-slate-300 text-transparent'
                   }`}
                 >
-                  ✓
+                  {state === 'missed' ? '✕' : '✓'}
                 </button>
-                <span className={`flex-1 text-base ${completed ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+                <span className={`flex-1 text-base ${state === 'done' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
                   {habit.name}
                 </span>
                 <button

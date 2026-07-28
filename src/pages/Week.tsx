@@ -155,7 +155,7 @@ export default function Week() {
                   </td>
                   {dates.map((date) => {
                     const log = logs[logKey(habit.id, date)]
-                    const completed = log?.completed ?? false
+                    const state = !log ? 'none' : log.completed ? 'done' : 'missed'
                     const hasNote = !!log?.note
                     return (
                       <td key={date} className="p-1 text-center">
@@ -163,12 +163,16 @@ export default function Week() {
                           <button
                             type="button"
                             onClick={() => toggleCompleted(habit.id, date)}
-                            aria-label={completed ? 'Mark incomplete' : 'Mark complete'}
-                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs ${
-                              completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 text-transparent'
+                            aria-label={state === 'done' ? 'Mark missed' : state === 'missed' ? 'Clear' : 'Mark complete'}
+                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                              state === 'done'
+                                ? 'border-emerald-500 bg-emerald-500 text-white'
+                                : state === 'missed'
+                                ? 'border-red-500 bg-red-500 text-white'
+                                : 'border-slate-300 text-transparent'
                             }`}
                           >
-                            ✓
+                            {state === 'missed' ? '✕' : '✓'}
                           </button>
                           <button
                             type="button"

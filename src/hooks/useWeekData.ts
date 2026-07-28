@@ -142,26 +142,46 @@ export function useWeekData(weekStart: string) {
     if (!user) return
     const key = logKey(habitId, date)
     const existing = logs[key]
-    const completed = !existing?.completed
 
-    const { data, error: upsertError } = await supabase
-      .from('habit_logs')
-      .upsert(
-        {
-          id: existing?.id,
+    // Three-state cycle: no row → completed=true → completed=false → delete row
+    if (!existing) {
+      // unchecked → green ✓
+      const { data, error: upsertError } = await supabase
+        .from('habit_logs')
+        .insert({
           user_id: user.id,
           habit_id: habitId,
           log_date: date,
-          completed,
-          note: existing?.note ?? null,
+          completed: true,
           updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'habit_id,log_date' },
-      )
-      .select('*')
-      .single()
-    if (upsertError) throw upsertError
-    setLogs((prev) => ({ ...prev, [key]: data }))
+        })
+        .select('*')
+        .single()
+      if (upsertError) throw upsertError
+      setLogs((prev) => ({ ...prev, [key]: data }))
+    } else if (existing.completed) {
+      // green ✓ → red ✗
+      const { data, error: upsertError } = await supabase
+        .from('habit_logs')
+        .update({ completed: false, updated_at: new Date().toISOString() })
+        .eq('id', existing.id)
+        .select('*')
+        .single()
+      if (upsertError) throw upsertError
+      setLogs((prev) => ({ ...prev, [key]: data }))
+    } else {
+      // red ✗ → delete row (back to unchecked)
+      const { error: deleteError } = await supabase
+        .from('habit_logs')
+        .delete()
+        .eq('id', existing.id)
+      if (deleteError) throw deleteError
+      setLogs((prev) => {
+        const next = { ...prev }
+        delete next[key]
+        return next
+      })
+    }
   }
 
   async function setNote(habitId: string, date: string, note: string) {
