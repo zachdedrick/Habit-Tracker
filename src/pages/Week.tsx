@@ -4,14 +4,12 @@ import { useWeekData, logKey } from '../hooks/useWeekData'
 import {
   dayLabel,
   dayNumber,
-  formatDateLong,
   formatWeekRange,
   getWeekDates,
   getWeekStart,
   shiftWeek,
   todayStr,
 } from '../lib/dates'
-import NoteModal from '../components/NoteModal'
 
 export default function Week() {
   const [searchParams] = useSearchParams()
@@ -22,7 +20,7 @@ export default function Week() {
   const {
     week, habits, logs, bonuses, loading, error,
     addHabit, renameHabit, deleteHabit, copyHabitsFrom,
-    toggleCompleted, setNote,
+    toggleCompleted,
     addBonus, removeBonus, toggleBonus, copyBonusesFrom,
   } = useWeekData(weekStart)
   const previous = useWeekData(previousWeekStart)
@@ -31,7 +29,6 @@ export default function Week() {
   const [newBonusName, setNewBonusName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
-  const [noteTarget, setNoteTarget] = useState<{ habitId: string; date: string } | null>(null)
   const [managing, setManaging] = useState(false)
   const [managingBonuses, setManagingBonuses] = useState(false)
 
@@ -61,8 +58,6 @@ export default function Week() {
   if (error) {
     return <p className="p-4 text-sm text-red-600">{error}</p>
   }
-
-  const noteHabit = habits.find((h) => h.id === noteTarget?.habitId)
 
   // Weekly completion % inclusive of bonuses
   const completedLogs = habits.reduce(
@@ -180,33 +175,22 @@ export default function Week() {
                   {dates.map((date) => {
                     const log = logs[logKey(habit.id, date)]
                     const state = !log ? 'none' : log.completed ? 'done' : 'missed'
-                    const hasNote = !!log?.note
                     return (
                       <td key={date} className="p-1 text-center">
-                        <div className="flex flex-col items-center gap-0.5">
-                          <button
-                            type="button"
-                            onClick={() => toggleCompleted(habit.id, date)}
-                            aria-label={state === 'done' ? 'Mark missed' : state === 'missed' ? 'Clear' : 'Mark complete'}
-                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold ${
-                              state === 'done'
-                                ? 'border-emerald-500 bg-emerald-500 text-white'
-                                : state === 'missed'
-                                ? 'border-red-500 bg-red-500 text-white'
-                                : 'border-slate-300 text-transparent'
-                            }`}
-                          >
-                            {state === 'missed' ? '✕' : '✓'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setNoteTarget({ habitId: habit.id, date })}
-                            aria-label="Add note"
-                            className={`text-[11px] leading-none ${hasNote ? 'text-amber-500' : 'text-slate-300'}`}
-                          >
-                            📝
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleCompleted(habit.id, date)}
+                          aria-label={state === 'done' ? 'Mark missed' : state === 'missed' ? 'Clear' : 'Mark complete'}
+                          className={`flex h-6 w-6 mx-auto items-center justify-center rounded-full border-2 text-xs font-bold ${
+                            state === 'done'
+                              ? 'border-emerald-500 bg-emerald-500 text-white'
+                              : state === 'missed'
+                              ? 'border-red-500 bg-red-500 text-white'
+                              : 'border-slate-300 text-transparent'
+                          }`}
+                        >
+                          {state === 'missed' ? '✕' : '✓'}
+                        </button>
                       </td>
                     )
                   })}
@@ -224,6 +208,23 @@ export default function Week() {
                   )}
                 </tr>
               ))}
+              {habits.length > 0 && (
+                <tr className="border-t-2 border-slate-200 bg-slate-50">
+                  <td className="sticky left-0 bg-slate-50 p-2 text-xs font-medium text-slate-500">Daily %</td>
+                  {dates.map((date) => {
+                    const completed = habits.filter((h) => logs[logKey(h.id, date)]?.completed).length
+                    const pct = Math.round((completed / habits.length) * 100)
+                    return (
+                      <td key={date} className="p-1 text-center">
+                        <span className={`text-xs font-semibold ${pct === 100 ? 'text-emerald-600' : pct >= 50 ? 'text-indigo-600' : 'text-slate-400'}`}>
+                          {pct}%
+                        </span>
+                      </td>
+                    )
+                  })}
+                  {managing && <td />}
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -352,15 +353,6 @@ export default function Week() {
         )}
       </div>
 
-      {noteHabit && noteTarget && (
-        <NoteModal
-          habitName={noteHabit.name}
-          dateLabel={formatDateLong(noteTarget.date)}
-          initialNote={logs[logKey(noteTarget.habitId, noteTarget.date)]?.note ?? ''}
-          onSave={(note) => setNote(noteTarget.habitId, noteTarget.date, note)}
-          onClose={() => setNoteTarget(null)}
-        />
-      )}
     </div>
   )
 }
